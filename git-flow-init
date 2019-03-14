@@ -143,7 +143,7 @@ cmd_default() {
 		branch_count=$(git_local_branches | grep -v "^${master_branch}\$" | wc -l)
 		if [ "$branch_count" -eq 0 ]; then
 			should_check_existence=NO
-			default_suggestion=$(git config --get gitflow.branch.develop || echo develop)
+			default_suggestion=$(git config --get gitflow.branch.develop || echo test)
 		else
 			echo
 			echo "Which branch should be used for integration of the \"next release\"?"
@@ -152,7 +152,7 @@ cmd_default() {
 			should_check_existence=YES
 			default_suggestion=
 			for guess in $(git config --get gitflow.branch.develop) \
-			             'develop' 'int' 'integration' 'master'; do
+			             'test'; do
 				if git_local_branch_exists "$guess" && [ "$guess" != "$master_branch" ]; then
 					default_suggestion="$guess"
 					break
@@ -161,7 +161,7 @@ cmd_default() {
 			
 			if [ -z $default_suggestion ]; then
 				should_check_existence=NO
-				default_suggestion=$(git config --get gitflow.branch.develop || echo develop)
+				default_suggestion=$(git config --get gitflow.branch.develop || echo test)
 			fi
 			
 		fi
