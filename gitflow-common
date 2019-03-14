@@ -175,6 +175,11 @@ gitflow_has_develop_configured() {
 	[ "$develop" != "" ] && git_local_branch_exists "$develop"
 }
 
+gitflow_has_dev_configured() {
+	local dev=$(git config --get gitflow.branch.dev)
+	[ "$dev" != "" ] && git_local_branch_exists "$dev"
+}
+
 gitflow_has_prefixes_configured() {
 	git config --get gitflow.prefix.feature >/dev/null 2>&1     && \
 	git config --get gitflow.prefix.release >/dev/null 2>&1     && \
@@ -186,8 +191,13 @@ gitflow_has_prefixes_configured() {
 gitflow_is_initialized() {
 	gitflow_has_master_configured                    && \
 	gitflow_has_develop_configured                   && \
+	gitflow_has_dev_configured						 && \
 	[ "$(git config --get gitflow.branch.master)" !=    \
 	  "$(git config --get gitflow.branch.develop)" ] && \
+	[ "$(git config --get gitflow.branch.master)" !=    \
+	  "$(git config --get gitflow.branch.dev)" ] 	 && \
+	[ "$(git config --get gitflow.branch.develop)" !=   \
+	  "$(git config --get gitflow.branch.dev)" ] 	 && \
 	gitflow_has_prefixes_configured
 }
 
