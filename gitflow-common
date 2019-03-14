@@ -206,6 +206,7 @@ gitflow_load_settings() {
 	export DOT_GIT_DIR=$(git rev-parse --git-dir 2>/dev/null)
 	export MASTER_BRANCH=$(git config --get gitflow.branch.master)
 	export DEVELOP_BRANCH=$(git config --get gitflow.branch.develop)
+	export DEV_BRANCH=$(git config --get gitflow.branch.dev)
 	export ORIGIN=$(git config --get gitflow.origin || echo origin)
 }
 
