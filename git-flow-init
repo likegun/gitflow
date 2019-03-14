@@ -280,6 +280,15 @@ cmd_default() {
 		created_gitflow_branch=1
 	fi
 
+	if ! git_local_branch_exists "$dev_branch"; then
+		if git_remote_branch_exists "origin/$dev_branch"; then
+			git_do branch "$dev_branch" "origin/$dev_branch" >/dev/null 2>&1
+		else
+			git_do branch --no-track "$dev_branch" "$master_branch"
+		fi
+		created_gitflow_branch=1
+	fi
+
 	# assert the gitflow repo has been correctly initialized
 	gitflow_is_initialized
 
