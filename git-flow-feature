@@ -289,6 +289,7 @@ cmd_finish() {
 		if flag fetch; then
 			git_do fetch -q "$ORIGIN" "$BRANCH"
 			git_do fetch -q "$ORIGIN" "$DEVELOP_BRANCH"
+			git_do fetch -q "$ORIGIN" "$DEV_BRANCH"
 		fi
 	fi
 
@@ -297,6 +298,9 @@ cmd_finish() {
 	fi
 	if has "$ORIGIN/$DEVELOP_BRANCH" $(git_remote_branches); then
 		require_branches_equal "$DEVELOP_BRANCH" "$ORIGIN/$DEVELOP_BRANCH"
+	fi
+	if has "$ORIGIN/$DEV_BRANCH" $(git_remote_branches); then
+		require_branches_equal "$DEV_BRANCH" "$ORIGIN/$DEV_BRANCH"
 	fi
 
 	# if the user wants to rebase, do that first
@@ -308,6 +312,43 @@ cmd_finish() {
 			warn "    git flow feature finish '$NAME' '$DEVELOP_BRANCH'"
 			exit 1
 		fi
+		if ! git flow feature rebase "$NAME" "$DEV_BRANCH"; then
+			warn "Finish was aborted due to conflicts during rebase."
+			warn "Please finish the rebase manually now."
+			warn "When finished, re-run:"
+			warn "    git flow feature finish '$NAME' '$DEV_BRANCH'"
+			exit 1
+		fi
+	fi
+
+		# merge into BASE
+	git_do checkout "$DEV_BRANCH"
+	if [ "$(git rev-list -n2 "$DEV_BRANCH..$BRANCH" | wc -l)" -eq 1 ]; then
+		git_do merge --ff "$BRANCH"
+	else
+		if noflag squash; then
+		    git_do merge --no-ff "$BRANCH"
+		else
+			git_do merge --squash "$BRANCH"
+			git_do commit
+			git_do merge "$BRANCH"
+		fi
+	fi
+
+	if [ $? -ne 0 ]; then
+		# oops.. we have a merge conflict!
+		# write the given $DEV_BRANCH to a temporary file (we need it later)
+		mkdir -p "$DOT_GIT_DIR/.gitflow"
+		echo "$DEV_BRANCH" > "$DOT_GIT_DIR/.gitflow/MERGE_BASE"
+		echo
+		echo "There were merge conflicts. To resolve the merge conflict manually, use:"
+		echo "    git mergetool"
+		echo "    git commit"
+		echo 
+		echo "You can then complete the finish by running it again:"
+		echo "    git flow feature finish $NAME"
+		echo
+		exit 1
 	fi
 
 	# merge into BASE
@@ -366,6 +407,7 @@ helper_finish_cleanup() {
 	echo
 	echo "Summary of actions:"
 	echo "- The feature branch '$BRANCH' was merged into '$DEVELOP_BRANCH'"
+	echo "- The feature branch '$BRANCH' was merged into '$DEV_BRANCH'"
 	#echo "- Merge conflicts were resolved"		# TODO: Add this line when it's supported
 	if flag keep; then
 		echo "- Feature branch '$BRANCH' is still available"
