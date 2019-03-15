@@ -280,8 +280,10 @@ cmd_finish() {
 	if ! git_is_branch_merged_into "$BRANCH" "$MASTER_BRANCH"; then
 		git_do checkout "$MASTER_BRANCH" || \
 		  die "无法 checkout $MASTER_BRANCH."
-		git_do merge --no-ff "$BRANCH" || \
-		  die "合并到${MASTER_BRANCH}存在冲突."
+		if ! git_do merge --no-ff "$BRANCH"; then
+			echo "合并到${MASTER_BRANCH}存在冲突."
+			die "请解决冲突再次调用\"finish\"命令结束预发布分支"
+		fi
 		  # TODO: What do we do now?
 	fi
 
@@ -310,8 +312,10 @@ cmd_finish() {
 
 		# TODO: Actually, accounting for 'git describe' pays, so we should
 		# ideally git merge --no-ff $tagname here, instead!
-		git_do merge --no-ff "$BRANCH" || \
-		  die "合并到${DEVELOP_BRANCH}存在冲突."
+		if ! git_do merge --no-ff "$BRANCH"; then
+			echo "合并到${DEVELOP_BRANCH}存在冲突."
+			die "请解决冲突再次调用\"finish\"命令结束预发布分支"
+		fi
 		  # TODO: What do we do now?
 	fi
 
@@ -321,8 +325,10 @@ cmd_finish() {
 
 		# TODO: Actually, accounting for 'git describe' pays, so we should
 		# ideally git merge --no-ff $tagname here, instead!
-		git_do merge --no-ff "$BRANCH" || \
-		  die "合并到${DEV_BRANCH}存在冲突."
+		if ! git_do merge --no-ff "$BRANCH"; then
+			echo "合并到${DEV_BRANCH}存在冲突."
+			die "请解决冲突再次调用\"finish\"命令结束预发布分支"
+		fi
 		  # TODO: What do we do now?
 	fi
 
