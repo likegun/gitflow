@@ -61,8 +61,8 @@ cmd_default() {
 
 	# running git flow init on an already initialized repo is fine
 	if gitflow_is_initialized && ! flag force; then
-		warn "Already initialized for gitflow."
-		warn "To force reinitialization, use: git flow init -f"
+		warn "已经初始化过"
+		warn "若想强制初始化，请用: git flow init -f"
 		exit 0
 	fi
 
@@ -70,7 +70,7 @@ cmd_default() {
 	local answer
 
     if flag defaults; then
-        warn "Using default branch names."
+        warn "使用默认的分支名."
     fi
 
 	# add a master branch if no such branch exists yet
@@ -88,12 +88,12 @@ cmd_default() {
 		local should_check_existence
 		branch_count=$(git_local_branches | wc -l)
 		if [ "$branch_count" -eq 0 ]; then
-			echo "No branches exist yet. Base branches must be created now."
+			echo "没有分支存在，基底分支必须现在创建."
 			should_check_existence=NO
 			default_suggestion=$(git config --get gitflow.branch.master || echo master)
 		else
 			echo
-			echo "Which branch should be used for bringing forth production releases?"
+			echo "您想用哪个分支作为生产分支?"
 			git_local_branches | sed 's/^.*$/   - &/g'
 
 			should_check_existence=YES
@@ -107,7 +107,7 @@ cmd_default() {
 			done
 		fi
 		
-		printf "Branch name for production releases: [$default_suggestion] "
+		printf "请输入生产分支名: [$default_suggestion] "
 		if noflag defaults; then
 			read answer
 		else
@@ -146,7 +146,7 @@ cmd_default() {
 			default_suggestion=$(git config --get gitflow.branch.develop || echo test)
 		else
 			echo
-			echo "Which branch should be used for integration of the \"next release\"?"
+			echo "您想用哪个分支作为测试分支?"
 			git_local_branches | grep -v "^${master_branch}\$" | sed 's/^.*$/   - &/g'
 
 			should_check_existence=YES
@@ -166,7 +166,7 @@ cmd_default() {
 			
 		fi
 
-		printf "Branch name for \"next release\" development: [$default_suggestion] "
+		printf "请输入测试分支名: [$default_suggestion] "
 		if noflag defaults; then
 			read answer
 		else
@@ -175,13 +175,13 @@ cmd_default() {
 		develop_branch=${answer:-$default_suggestion}
 
 		if [ "$master_branch" = "$develop_branch" ]; then
-			die "Production and integration branches should differ."
+			die "生产和测试分支必须不相同"
 		fi
 
 		# check existence in case of an already existing repo
 		if [ "$should_check_existence" = "YES" ]; then
 			git_local_branch_exists "$develop_branch" || \
-				die "Local branch '$develop_branch' does not exist."
+				die "分支 '$develop_branch' 不存在."
 		fi
 
 		# store the name of the develop branch
@@ -202,7 +202,7 @@ cmd_default() {
 			default_suggestion=$(git config --get gitflow.branch.dev || echo dev)
 		else
 			echo
-			echo "Which branch should be used for local development environment?"
+			echo "您想用哪个分支作为开发环境(只用作开发环境部署)分支?"
 			git_local_branches | grep -v "^${master_branch}\$" | grep -v "^${develop_branch}\$" | sed 's/^.*$/   - &/g'
 
 			should_check_existence=YES
@@ -222,7 +222,7 @@ cmd_default() {
 			
 		fi
 
-		printf "Branch name for local development environment: [$default_suggestion] "
+		printf "请输入开发环境(只用作开发环境部署)分支名: [$default_suggestion] "
 		if noflag defaults; then
 			read answer
 		else
@@ -231,17 +231,17 @@ cmd_default() {
 		dev_branch=${answer:-$default_suggestion}
 
 		if [ "$master_branch" = "$dev_branch" ]; then
-			die "Production and integration branches should differ."
+			die "生产和测试分支必须不相同."
 		fi
 
 		if [ "$develop_branch" = "$dev_branch" ]; then
-			die "Integration and development branches should differ."
+			die "测试和开发环境分支必须不相同."
 		fi
 
 		# check existence in case of an already existing repo
 		if [ "$should_check_existence" = "YES" ]; then
 			git_local_branch_exists "$dev_branch" || \
-				die "Local branch '$dev_branch' does not exist."
+				die "分支 '$dev_branch' 不存在."
 		fi
 
 		# store the name of the develop branch
@@ -305,7 +305,7 @@ cmd_default() {
 	   ! git config --get gitflow.prefix.support >/dev/null 2>&1 || 
 	   ! git config --get gitflow.prefix.versiontag >/dev/null 2>&1; then
 		echo
-		echo "How to name your supporting branch prefixes?"
+		echo "请设置分支前缀:"
 	fi
 
 	local prefix
@@ -313,7 +313,7 @@ cmd_default() {
 	# Feature branches
 	if ! git config --get gitflow.prefix.feature >/dev/null 2>&1 || flag force; then
 		default_suggestion=$(git config --get gitflow.prefix.feature || echo feature/)
-		printf "Feature branches? [$default_suggestion] "
+		printf "Feature 分支前缀? [$default_suggestion] "
 		if noflag defaults; then
 			read answer
 		else
@@ -326,7 +326,7 @@ cmd_default() {
 	# Release branches
 	if ! git config --get gitflow.prefix.release >/dev/null 2>&1 || flag force; then
 		default_suggestion=$(git config --get gitflow.prefix.release || echo release/)
-		printf "Release branches? [$default_suggestion] "
+		printf "Release 分支前缀? [$default_suggestion] "
 		if noflag defaults; then
 			read answer
 		else
@@ -340,7 +340,7 @@ cmd_default() {
 	# Hotfix branches
 	if ! git config --get gitflow.prefix.hotfix >/dev/null 2>&1 || flag force; then
 		default_suggestion=$(git config --get gitflow.prefix.hotfix || echo hotfix/)
-		printf "Hotfix branches? [$default_suggestion] "
+		printf "Hotfix 分支前缀? [$default_suggestion] "
 		if noflag defaults; then
 			read answer
 		else
@@ -354,7 +354,7 @@ cmd_default() {
 	# Support branches
 	if ! git config --get gitflow.prefix.support >/dev/null 2>&1 || flag force; then
 		default_suggestion=$(git config --get gitflow.prefix.support || echo support/)
-		printf "Support branches? [$default_suggestion] "
+		printf "Support 分支前缀? [$default_suggestion] "
 		if noflag defaults; then
 			read answer
 		else
@@ -368,7 +368,7 @@ cmd_default() {
 	# Version tag prefix
 	if ! git config --get gitflow.prefix.versiontag >/dev/null 2>&1 || flag force; then
 		default_suggestion=$(git config --get gitflow.prefix.versiontag || echo "")
-		printf "Version tag prefix? [$default_suggestion] "
+		printf "版本标签前缀? [$default_suggestion] "
 		if noflag defaults; then
 			read answer
 		else
