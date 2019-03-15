@@ -215,15 +215,15 @@ cmd_start() {
 
 	# create branch
 	if ! git_do checkout -b "$BRANCH" "$BASE"; then
-		die "Could not create feature branch '$BRANCH'"
+		die "无法创建功能分支 '$BRANCH'"
 	fi
 
 	echo
-	echo "Summary of actions:"
-	echo "- A new branch '$BRANCH' was created, based on '$BASE'"
-	echo "- You are now on branch '$BRANCH'"
+	echo "总结:"
+	echo "- 基于 '$BASE' 创建了一个功能分支 '$BRANCH'"
+	echo "- 你现在处于分支 '$BRANCH'"
 	echo ""
-	echo "Now, start committing on your feature. When done, use:"
+	echo "现在, 请开始开发您的功能分支. 当完成开发并提交后, 使用以下命令结束功能分支:"
 	echo ""
 	echo "     git flow feature finish $NAME"
 	echo
@@ -270,11 +270,11 @@ cmd_finish() {
 			fi
 		else
 			echo
-			echo "Merge conflicts not resolved yet, use:"
+			echo "有冲突未解决, 请使用以下命令:"
 			echo "    git mergetool"
 			echo "    git commit"
 			echo 
-			echo "You can then complete the finish by running it again:"
+			echo "解决完冲突后，再使用以下命令来完成\"finish\"操作":
 			echo "    git flow feature finish $NAME"
 			echo
 			exit 1
@@ -341,11 +341,11 @@ cmd_finish() {
 		mkdir -p "$DOT_GIT_DIR/.gitflow"
 		echo "$DEV_BRANCH" > "$DOT_GIT_DIR/.gitflow/MERGE_BASE"
 		echo
-		echo "There were merge conflicts. To resolve the merge conflict manually, use:"
+		echo "合并有冲突. 请使用以下命令手动解决冲突:"
 		echo "    git mergetool"
 		echo "    git commit"
 		echo 
-		echo "You can then complete the finish by running it again:"
+		echo "解决完冲突后，再使用以下命令来完成\"finish\"操作:"
 		echo "    git flow feature finish $NAME"
 		echo
 		exit 1
@@ -371,11 +371,11 @@ cmd_finish() {
 		mkdir -p "$DOT_GIT_DIR/.gitflow"
 		echo "$DEVELOP_BRANCH" > "$DOT_GIT_DIR/.gitflow/MERGE_BASE"
 		echo
-		echo "There were merge conflicts. To resolve the merge conflict manually, use:"
+		echo "合并有冲突. 请使用以下命令手动解决冲突:"
 		echo "    git mergetool"
 		echo "    git commit"
 		echo 
-		echo "You can then complete the finish by running it again:"
+		echo "解决完冲突后，再使用以下命令来完成\"finish\"操作:"
 		echo "    git flow feature finish $NAME"
 		echo
 		exit 1
@@ -405,16 +405,16 @@ helper_finish_cleanup() {
 	fi
 
 	echo
-	echo "Summary of actions:"
-	echo "- The feature branch '$BRANCH' was merged into '$DEVELOP_BRANCH'"
-	echo "- The feature branch '$BRANCH' was merged into '$DEV_BRANCH'"
+	echo "总结:"
+	echo "- 功能分支 '$BRANCH' 合并到了 '$DEVELOP_BRANCH'"
+	echo "- 功能分支 '$BRANCH' 合并到了 '$DEV_BRANCH'"
 	#echo "- Merge conflicts were resolved"		# TODO: Add this line when it's supported
 	if flag keep; then
-		echo "- Feature branch '$BRANCH' is still available"
+		echo "- 功能分支 '$BRANCH' 被保留了"
 	else
-		echo "- Feature branch '$BRANCH' has been removed"
+		echo "- 功能分支 '$BRANCH' 被删除了"
 	fi
-	echo "- You are now on branch '$DEVELOP_BRANCH'"
+	echo "- 您现在处于分支 '$DEVELOP_BRANCH'"
 	echo
 }
 

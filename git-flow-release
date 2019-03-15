@@ -174,14 +174,11 @@ cmd_start() {
 	git_do checkout -b "$BRANCH" "$BASE"
 
 	echo
-	echo "Summary of actions:"
-	echo "- A new branch '$BRANCH' was created, based on '$BASE'"
-	echo "- You are now on branch '$BRANCH'"
+	echo "总结:"
+	echo "- 基于 '$BASE' 创建了一个预发布分支 '$BRANCH'"
+	echo "- 你现在处于分支 '$BRANCH'"
 	echo
-	echo "Follow-up actions:"
-	echo "- Bump the version number now!"
-	echo "- Start committing last-minute fixes in preparing your release"
-	echo "- When done, run:"
+	echo "- 现在，请在预发布分支验证功能，若发现问题请在预发布分支进行修复，当完成预发布验证后，使用以下命令完成预发布分支:"
 	echo
 	echo "     git flow release finish '$VERSION'"
 	echo
@@ -232,14 +229,14 @@ cmd_finish() {
 	# but the merge into master was successful, we skip it now
 	if ! git_is_branch_merged_into "$BRANCH" "$MASTER_BRANCH"; then
 		git_do checkout "$MASTER_BRANCH" || \
-		  die "Could not check out $MASTER_BRANCH."
+		  die "无法 checkout $MASTER_BRANCH."
 		if noflag squash; then
 			git_do merge --no-ff "$BRANCH" || \
-				die "There were merge conflicts."
+				die "合并到${MASTER_BRANCH}存在冲突."
 				# TODO: What do we do now?
 		else
 			git_do merge --squash "$BRANCH" || \
-				die "There were merge conflicts."
+				die "合并到${MASTER_BRANCH}存在冲突."
 			git_do commit
 		fi
 	fi
@@ -256,7 +253,7 @@ cmd_finish() {
 			[ "$FLAGS_message" != "" ] && opts="$opts -m '$FLAGS_message'"
 			[ "$FLAGS_messagefile" != "" ] && opts="$opts -F '$FLAGS_messagefile'"
 			eval git_do tag $opts "$tagname" "$BRANCH" || \
-			die "Tagging failed. Please run finish again to retry."
+			die "打标签失败. 请用finish命令进行重试"
 		fi
 	fi
 
@@ -265,17 +262,17 @@ cmd_finish() {
 	# but the merge into develop was successful, we skip it now
 	if ! git_is_branch_merged_into "$BRANCH" "$DEVELOP_BRANCH"; then
 		git_do checkout "$DEVELOP_BRANCH" || \
-		  die "Could not check out $DEVELOP_BRANCH."
+		  die "无法 checkout $DEVELOP_BRANCH."
 
 		# TODO: Actually, accounting for 'git describe' pays, so we should
 		# ideally git merge --no-ff $tagname here, instead!
 		if noflag squash; then
 			git_do merge --no-ff "$BRANCH" || \
-				die "There were merge conflicts."
+				die "合并到${DEVELOP_BRANCH}存在冲突."
 				# TODO: What do we do now?
 		else
 			git_do merge --squash "$BRANCH" || \
-				die "There were merge conflicts."
+				die "合并到${DEVELOP_BRANCH}存在冲突."
 				# TODO: What do we do now?
 			git_do commit
 		fi
@@ -283,17 +280,17 @@ cmd_finish() {
 
 	if ! git_is_branch_merged_into "$BRANCH" "$DEV_BRANCH"; then
 		git_do checkout "$DEV_BRANCH" || \
-		  die "Could not check out $DEV_BRANCH."
+		  die "无法 checkout $DEV_BRANCH."
 
 		# TODO: Actually, accounting for 'git describe' pays, so we should
 		# ideally git merge --no-ff $tagname here, instead!
 		if noflag squash; then
 			git_do merge --no-ff "$BRANCH" || \
-				die "There were merge conflicts."
+				die "合并到${DEV_BRANCH}存在冲突."
 				# TODO: What do we do now?
 		else
 			git_do merge --squash "$BRANCH" || \
-				die "There were merge conflicts."
+				die "合并到${DEV_BRANCH}存在冲突."
 				# TODO: What do we do now?
 			git_do commit
 		fi
@@ -309,36 +306,36 @@ cmd_finish() {
 
 	if flag push; then
 		git_do push "$ORIGIN" "$DEVELOP_BRANCH" || \
-			die "Could not push to $DEVELOP_BRANCH from $ORIGIN."
+			die "无法 push to $DEVELOP_BRANCH from $ORIGIN."
 		git_do push "$ORIGIN" "$DEV_BRANCH" || \
-			die "Could not push to $DEV_BRANCH from $ORIGIN."
+			die "无法 push to $DEV_BRANCH from $ORIGIN."
 		git_do push "$ORIGIN" "$MASTER_BRANCH" || \
-			die "Could not push to $MASTER_BRANCH from $ORIGIN."
+			die "无法 push to $MASTER_BRANCH from $ORIGIN."
 		if noflag notag; then
 			git_do push --tags "$ORIGIN" || \
-			  die "Could not push tags to $ORIGIN."
+			  die "无法推送标签到 $ORIGIN."
 		fi
 		git_do push "$ORIGIN" :"$BRANCH" || \
-			die "Could not delete the remote $BRANCH in $ORIGIN."
+			die "无法删除分支 $BRANCH in $ORIGIN."
 	fi
 
 	echo
-	echo "Summary of actions:"
+	echo "总结:"
 	echo "- Latest objects have been fetched from '$ORIGIN'"
-	echo "- Release branch has been merged into '$MASTER_BRANCH'"
+	echo "- 预发布分支被合并到 '$MASTER_BRANCH'"
 	if noflag notag; then
-		echo "- The release was tagged '$tagname'"
+		echo "- 自动打上标签 '$tagname'"
 	fi
-	echo "- Release branch has been back-merged into '$DEVELOP_BRANCH'"
-	echo "- Release branch has been back-merged into '$DEV_BRANCH'"
+	echo "- 预发布分支被合并到 '$DEVELOP_BRANCH'"
+	echo "- 预发布分支被合并到 '$DEV_BRANCH'"
 	if flag keep; then
-		echo "- Release branch '$BRANCH' is still available"
+		echo "- 预发布分支 '$BRANCH' 被保留了"
 	else
-		echo "- Release branch '$BRANCH' has been deleted"
+		echo "- 预发布分支 '$BRANCH' 被删除了"
 	fi
 	if flag push; then
-		echo "- '$DEV_BRANCH', '$DEVELOP_BRANCH', '$MASTER_BRANCH' and tags have been pushed to '$ORIGIN'"
-		echo "- Release branch '$BRANCH' in '$ORIGIN' has been deleted."
+		echo "- '$DEV_BRANCH', '$DEVELOP_BRANCH', '$MASTER_BRANCH' 和 标签 被推送到 '$ORIGIN'"
+		echo "- 预发布分支 '$BRANCH' in '$ORIGIN' 被删除了."
 	fi
 	echo
 }
