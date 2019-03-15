@@ -264,12 +264,17 @@ cmd_finish() {
 		  die "Could not fetch $MASTER_BRANCH from $ORIGIN."
 		git_do fetch -q "$ORIGIN" "$DEVELOP_BRANCH" || \
 		  die "Could not fetch $DEVELOP_BRANCH from $ORIGIN."
+		git_do fetch -q "$ORIGIN" "$DEV_BRANCH" || \
+		  die "Could not fetch $DEV_BRANCH from $ORIGIN."
 	fi
 	if has "$ORIGIN/$MASTER_BRANCH" $(git_remote_branches); then
 		require_branches_equal "$MASTER_BRANCH" "$ORIGIN/$MASTER_BRANCH"
 	fi
 	if has "$ORIGIN/$DEVELOP_BRANCH" $(git_remote_branches); then
 		require_branches_equal "$DEVELOP_BRANCH" "$ORIGIN/$DEVELOP_BRANCH"
+	fi
+	if has "$ORIGIN/$DEV_BRANCH" $(git_remote_branches); then
+		require_branches_equal "$DEV_BRANCH" "$ORIGIN/$DEV_BRANCH"
 	fi
 
 	# try to merge into master
@@ -313,12 +318,25 @@ cmd_finish() {
 		  # TODO: What do we do now?
 	fi
 
+	if ! git_is_branch_merged_into "$BRANCH" "$DEV_BRANCH"; then
+		git_do checkout "$DEV_BRANCH" || \
+		  die "Could not check out $DEV_BRANCH."
+
+		# TODO: Actually, accounting for 'git describe' pays, so we should
+		# ideally git merge --no-ff $tagname here, instead!
+		git_do merge --no-ff "$BRANCH" || \
+		  die "There were merge conflicts."
+		  # TODO: What do we do now?
+	fi
+
 	# delete branch
 	if noflag keep; then
 		git_do branch -d "$BRANCH"
 	fi
 
 	if flag push; then
+		git_do push "$ORIGIN" "$DEV_BRANCH" || \
+			die "Could not push to $DEV_BRANCH from $ORIGIN."
 		git_do push "$ORIGIN" "$DEVELOP_BRANCH" || \
 			die "Could not push to $DEVELOP_BRANCH from $ORIGIN."
 		git_do push "$ORIGIN" "$MASTER_BRANCH" || \
@@ -336,6 +354,7 @@ cmd_finish() {
 	if noflag notag; then
 		echo "- The hotfix was tagged '$VERSION_PREFIX$VERSION'"
 	fi
+	echo "- Hotfix branch has been back-merged into '$DEV_BRANCH'"
 	echo "- Hotfix branch has been back-merged into '$DEVELOP_BRANCH'"
 	if flag keep; then
 		echo "- Hotfix branch '$BRANCH' is still available"
@@ -343,7 +362,7 @@ cmd_finish() {
 		echo "- Hotfix branch '$BRANCH' has been deleted"
 	fi
 	if flag push; then
-		echo "- '$DEVELOP_BRANCH', '$MASTER_BRANCH' and tags have been pushed to '$ORIGIN'"
+		echo "- '$DEV_BRANCH', '$DEVELOP_BRANCH', '$MASTER_BRANCH' and tags have been pushed to '$ORIGIN'"
 	fi
 	echo
 }
