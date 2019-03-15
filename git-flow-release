@@ -214,12 +214,17 @@ cmd_finish() {
 		  die "Could not fetch $MASTER_BRANCH from $ORIGIN."
 		git_do fetch -q "$ORIGIN" "$DEVELOP_BRANCH" || \
 		  die "Could not fetch $DEVELOP_BRANCH from $ORIGIN."
+		git_do fetch -q "$ORIGIN" "$DEV_BRANCH" || \
+		  die "Could not fetch $DEV_BRANCH from $ORIGIN."
 	fi
 	if has "$ORIGIN/$MASTER_BRANCH" $(git_remote_branches); then
 		require_branches_equal "$MASTER_BRANCH" "$ORIGIN/$MASTER_BRANCH"
 	fi
 	if has "$ORIGIN/$DEVELOP_BRANCH" $(git_remote_branches); then
 		require_branches_equal "$DEVELOP_BRANCH" "$ORIGIN/$DEVELOP_BRANCH"
+	fi
+	if has "$ORIGIN/$DEV_BRANCH" $(git_remote_branches); then
+		require_branches_equal "$DEV_BRANCH" "$ORIGIN/$DEV_BRANCH"
 	fi
 
 	# try to merge into master
@@ -276,6 +281,24 @@ cmd_finish() {
 		fi
 	fi
 
+	if ! git_is_branch_merged_into "$BRANCH" "$DEV_BRANCH"; then
+		git_do checkout "$DEV_BRANCH" || \
+		  die "Could not check out $DEV_BRANCH."
+
+		# TODO: Actually, accounting for 'git describe' pays, so we should
+		# ideally git merge --no-ff $tagname here, instead!
+		if noflag squash; then
+			git_do merge --no-ff "$BRANCH" || \
+				die "There were merge conflicts."
+				# TODO: What do we do now?
+		else
+			git_do merge --squash "$BRANCH" || \
+				die "There were merge conflicts."
+				# TODO: What do we do now?
+			git_do commit
+		fi
+	fi
+
 	# delete branch
 	if noflag keep; then
 		if [ "$BRANCH" = "$(git_current_branch)" ]; then
@@ -287,6 +310,8 @@ cmd_finish() {
 	if flag push; then
 		git_do push "$ORIGIN" "$DEVELOP_BRANCH" || \
 			die "Could not push to $DEVELOP_BRANCH from $ORIGIN."
+		git_do push "$ORIGIN" "$DEV_BRANCH" || \
+			die "Could not push to $DEV_BRANCH from $ORIGIN."
 		git_do push "$ORIGIN" "$MASTER_BRANCH" || \
 			die "Could not push to $MASTER_BRANCH from $ORIGIN."
 		if noflag notag; then
@@ -305,13 +330,14 @@ cmd_finish() {
 		echo "- The release was tagged '$tagname'"
 	fi
 	echo "- Release branch has been back-merged into '$DEVELOP_BRANCH'"
+	echo "- Release branch has been back-merged into '$DEV_BRANCH'"
 	if flag keep; then
 		echo "- Release branch '$BRANCH' is still available"
 	else
 		echo "- Release branch '$BRANCH' has been deleted"
 	fi
 	if flag push; then
-		echo "- '$DEVELOP_BRANCH', '$MASTER_BRANCH' and tags have been pushed to '$ORIGIN'"
+		echo "- '$DEV_BRANCH', '$DEVELOP_BRANCH', '$MASTER_BRANCH' and tags have been pushed to '$ORIGIN'"
 		echo "- Release branch '$BRANCH' in '$ORIGIN' has been deleted."
 	fi
 	echo
